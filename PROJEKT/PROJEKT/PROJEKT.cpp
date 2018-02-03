@@ -1,74 +1,25 @@
-
-#include "stdafx.h"
 #include <iostream>
 #include <conio.h>
-#include "windows.h"
-
-
-
-void wstep();
-void znak(char &z, int &);
-void rysowanie(char &z, int, int, int &);
-void poruszanie(int &, int &, int &);
-void koniec();
+#include <Windows.h>
 
 using namespace std;
 
-void gotoxy(int x, int y)
-{
-	COORD c;
-	c.X = x;
-	c.Y = y;
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
-}
+int polozenieZnacznikaX = 0;
+int polozenieZnacznikaY = 0	;
+const int ruchGora = 72, ruchDol = 80, ruchLewa = 75, ruchPrawa = 77;
 
-int wherex()
-{
+void ksztaltZzadania(int szerokoscFigury, int wysokoscFigury, char znak);
+void gotoxy(short polozenieZnacznikaX, short polozenieZnacznikaY);
+void HideCursor();
 
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-	return csbi.dwCursorPosition.X;
-}
-
-int wherey()
-{
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-	return csbi.dwCursorPosition.Y;
-}
-
-void HideCursor()
-{
-	::HANDLE hConsoleOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
-	::CONSOLE_CURSOR_INFO hCCI;
-	::GetConsoleCursorInfo(hConsoleOut, &hCCI);
-	hCCI.bVisible = FALSE;
-	::SetConsoleCursorInfo(hConsoleOut, &hCCI);
-}
-
-
-
-int main()
-{
-	char z;
-	int x = 38, y = 11, bok;
-	wstep();
-	znak(z, bok);
-	do
-	{							
-		poruszanie(x, y, bok);
-		rysowanie(z, x, y, bok);
-	} while (_getch() != 27);
-	koniec();
-	return 0;
-}
-
-
-
-void wstep()
-{
-	system("cls");
-	cout << "Witaj w programie rysowania znaku!" << endl;
+int main() {
+	char nawigacja;
+	int szerokoscFigury, wysokoscFigury;
+	char znak;
+	bool warunek = true;
+	system("MODE CON COLS=80 LINES=20");
+	HideCursor();
+	cout << "Witaj w programie rysowania znaku !" << endl;
 	cout << "Program powinien umozliwic:" << endl;
 	cout << "   - wybor znaku kodu ASCII" << endl;
 	cout << "   - wczytanie poczatkowych rozmiarow figury" << endl;
@@ -80,90 +31,140 @@ void wstep()
 	_getch();
 	system("cls");
 
+	while (true)
+	{
+		cout << "Podaj szerokosc ksztaltu z zakresu 4 - 20:" << endl;
+		cin >> szerokoscFigury;
+		if (szerokoscFigury > 20 || szerokoscFigury < 4)
+		{
+			cout << "Podaj ponownie." << endl;
+			continue;
+		}
+		cout << "Podaj wysokosc ksztaltu z zakresu 4-20: " << endl;
+		cin >> wysokoscFigury;
+		if (wysokoscFigury > 20 || wysokoscFigury < 4)
+		{
+			cout << "Podaj ponownie." << endl;
+			continue;
+		}
+		cout << "Podaj znak, ktory posluzy za budulec figury" << endl;
+		cin >> znak;
+		system("cls");
+		gotoxy(polozenieZnacznikaX, polozenieZnacznikaY);
+		while (warunek)
+		{
+			ksztaltZzadania(szerokoscFigury, wysokoscFigury, znak);
+			nawigacja = _getch();
+			switch (nawigacja)
+			{
+			case '+':
+			{
+				if (polozenieZnacznikaY < 0 )
+				{
+					break;
+				}
+				if (polozenieZnacznikaY + (wysokoscFigury * 2) + 1 >= 19)
+				{
+					polozenieZnacznikaY = polozenieZnacznikaY - 2;
+					if (polozenieZnacznikaY < 0)
+					{
+						polozenieZnacznikaY = polozenieZnacznikaY + 2;
+						break;
+					}
+				}
+			
+				if (polozenieZnacznikaX + szerokoscFigury > 78)
+				{
+					polozenieZnacznikaX--;
+				}
+				szerokoscFigury++;
+				wysokoscFigury++;
+				break;
+			}
+			case '-':
+			{
+				if (wysokoscFigury == 4 || szerokoscFigury == 4)
+				{
+					break;
+				}
+				szerokoscFigury--;
+				wysokoscFigury--;
+				break;
+			}
+			case ruchGora:
+			{
+				if (polozenieZnacznikaY == 0)
+				{
+					break;
+				}
+				polozenieZnacznikaY--;
+				break;
+			}
+			case ruchDol:
+			{
+				if (polozenieZnacznikaY == 19 - (wysokoscFigury * 2) )
+				{
+					break;
+				}
+				polozenieZnacznikaY++;
+				break;
+			}
+			case ruchLewa:
+			{
+				if (polozenieZnacznikaX == 0)
+				{
+					break;
+				}
+				polozenieZnacznikaX--;
+				break;
+			}
+			case ruchPrawa:
+			{
+				if (polozenieZnacznikaX == 79 - szerokoscFigury)
+				{
+					break;
+				}
+				polozenieZnacznikaX++;
+				break;
+			}
+			case 'x':
+			{
+				warunek = false;
+				break;
+			}
+			}
+			system("cls");
+		}
+	}
 }
 
-void znak(char &z,int &bok)
+void gotoxy(short polozenieZnacznikaX, short polozenieZnacznikaY)
 {
-	cout << "Wybierz znak ASCII, ktory posluzy za budulec figury:";
-	cin >> z;
-	cout << "\nPodaj poczatkowy rozmiar figury (od 5 do 23):";
-	cin >> bok;
-	while (bok < 5 || bok > 23)
+	HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+	COORD position = { polozenieZnacznikaX, polozenieZnacznikaY };
+
+	SetConsoleCursorPosition(hStdout, position);
+}
+void ksztaltZzadania(int szerokoscFigury, int wysokoscFigury, char znak) {
+
+	for (int i = 0; i <= wysokoscFigury; i++, polozenieZnacznikaX)
 	{
-		cout << "\nPodaj prawidlowy rozmiar figury!:"; cin >> bok;
-	} 
+		gotoxy(polozenieZnacznikaX + i, polozenieZnacznikaY + i);
+		cout << znak;
+	}
+	for (int i = 0; i <= szerokoscFigury; i++, polozenieZnacznikaY)
+	{
+		gotoxy(polozenieZnacznikaX + i, polozenieZnacznikaY + 2 * wysokoscFigury - i);
+		cout << znak;
+	}
+
 }
 
-void rysowanie(char &z, int x, int y, int &bok)
+void HideCursor()
 {
-	
-	system("cls");
-	int x1 = x; int y1 = y;
-	gotoxy(x, y);
-
-
-
-
-	for (int i = x1 - (bok / 2); i <= x1+1; i++, y1++)	
-	{
-		gotoxy(i, y1 - bok / 2);
-		cout << z;
-	}
-
-
-	for (int i = x1; i <= x1 + bok / 2; i++, y1--)
-	{
-		gotoxy(i-(bok/2), y1 + bok / 2 - (bok/2));
-		cout << z;
-	}
-
-	gotoxy(3, 24);
-	cout <<"Nacisnij ESC, aby wyjsc...    " <<"Dlugosc boku:" << bok<<"    "<<"Wspolrzedne (x,y):"<<x<<"|"<<y;
-}
-
-
-void poruszanie(int &x, int &y, int &bok)
-{
-	HideCursor();
-	char klawisz = _getch();
-	int x_l = (x - bok / 2);
-	int x_p = (x);
-	int y_g = (y - bok / 2);
-	int y_d = y;
-
-
-	switch (klawisz)
-	{
-	case 75:
-	{if(x_l>=1)x--; break; }
-	case 77:
-	{if (x_p<=76)x++; break; }
-	case 72:
-	{if (y_g>=1)y--; break; }
-	case 80:
-	{if (y_d<=(20-(bok/2)))y++; break; }
-	case '+': {if ((x_l>=1)&&(x_p<=77)&&(y_g>=1)&& (y_d <= (20 - (bok / 2))))  bok += 2;
-		break; }
-	case '-':{if (bok>=6) bok -= 2;	
-		break; }								 	
-	}
-}	
-
-
-void koniec()
-{
-	system("cls");
-	int klawisz;
-	gotoxy(0, 10);
-	cout << "Jezeli chcesz powtorzyc program, nacisnij klawisz 'P'" << endl;
-	cout << "W innym przypadku, nacisnij dowolny klawisz..."<<endl;
-	gotoxy(0, 30);
-	cout << "Projekt wykonal: Piotr Malon" << endl;
-	cout << "Numer indeksu: s16721";
-	klawisz=_getch();
-	switch (klawisz)
-	{
-	case 'P': {main(); break; }
-	case 'p': {main(); break; }
-	}
+	::HANDLE hConsoleOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
+	::CONSOLE_CURSOR_INFO hCCI;
+	::GetConsoleCursorInfo(hConsoleOut, &hCCI);
+	hCCI.bVisible = FALSE;
+	::SetConsoleCursorInfo(hConsoleOut, &hCCI);
 }
